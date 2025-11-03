@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     ports:
-      - "8000:8000"
+      - "${EXTERNAL_PORT:-8000}:8000"
     environment:
       DEBUG: "1"
       DATABASE_NAME: agent_hub
