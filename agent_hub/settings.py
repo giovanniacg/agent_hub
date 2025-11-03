@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "drf_spectacular",
     "django_filters",
+    "whitenoise.runserver_nostatic",
     # Local apps
     "core",
     "api",
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -71,7 +73,6 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "agent_hub.urls"
 WSGI_APPLICATION = "agent_hub.wsgi.application"
-STATIC_URL = "static/"
 
 
 # -------------------------------------------------------
@@ -193,6 +194,12 @@ SPECTACULAR_SETTINGS = {
 # -------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 
 # -------------------------------------------------------
