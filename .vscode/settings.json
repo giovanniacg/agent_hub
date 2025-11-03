@@ -1,0 +1,14 @@
+{
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportIncompatibleMethodOverride": "none",
+        "reportIncompatibleVariableOverride": "none",
+        "reportAttributeAccessIssue": "none",
+        "reportAssignmentType": "none",
+        "reportArgumentType": "none",
+        "reportCallIssue": "none",
+    },
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+}

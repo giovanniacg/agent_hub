@@ -1,33 +1,36 @@
 from django.contrib import admin, messages
 from django.utils import timezone
 from django.conf import settings
+from django.utils.html import format_html
 
 from .models import ApiKey
 
+
 class ApiKeyAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "user", "key_id", "is_active",
-        "expired_display", "last_used_at", "expires_at", "created_at",
+        "name",
+        "user",
+        "key_id",
+        "is_active",
+        "expired_display",
+        "last_used_at",
+        "expires_at",
+        "created_at",
     )
     readonly_fields = ("key_id", "created_at", "last_used_at", "revoked_at")
     search_fields = ("name", "key_id", "user__username", "user__email")
     list_filter = ("is_active",)
     fieldsets = (
-        (None, {
-            "fields": ("name", "user", "scopes")
-        }),
-        ("Status", {
-            "fields": ("is_active", "expires_at", "revoked_at")
-        }),
-        ("Somente leitura", {
-            "fields": ("key_id", "created_at", "last_used_at")
-        }),
+        (None, {"fields": ("name", "user")}),
+        ("Status", {"fields": ("is_active", "expires_at", "revoked_at")}),
+        ("Somente leitura", {"fields": ("key_id", "created_at", "last_used_at")}),
     )
     actions = ["revogar_chaves", "rotacionar_chave"]
 
     def expired_display(self, obj):
         return "Sim" if obj.is_expired else "Não"
-    expired_display.short_description = "Expirada?"
+
+    expired_display.short_description = "Expirada?"  # type: ignore
 
     # --- CREATE: gera token na criação e mostra 1x ---
     def save_model(self, request, obj, form, change):
@@ -50,28 +53,30 @@ class ApiKeyAdmin(admin.ModelAdmin):
         if generated_token:
             self.message_user(
                 request,
-                (
-                    "✅ <b>API Key criada!</b><br>"
+                format_html(
+                    "✅ <strong>API Key criada!</strong><br>"
                     "Copie e guarde com segurança (não será mostrada novamente):<br>"
-                    f"<code>{generated_token}</code>"
+                    '<code style="word-break:break-all;user-select:all;">{}</code>',
+                    generated_token,
                 ),
                 level=messages.SUCCESS,
-                extra_tags="safe",
             )
 
     # --- ACTION: revogar (desativar) ---
     def revogar_chaves(self, request, queryset):
         updated = queryset.update(is_active=False, revoked_at=timezone.now())
         self.message_user(request, f"🔒 {updated} chave(s) revogadas.")
-    revogar_chaves.short_description = "Revogar chaves selecionadas"
+
+    revogar_chaves.short_description = "Revogar chaves selecionadas"  # type: ignore
 
     # --- ACTION: rotacionar (gera novo token) para UMA por vez ---
     def rotacionar_chave(self, request, queryset):
         pepper = getattr(settings, "API_KEY_PEPPER", "")
         if queryset.count() != 1:
             self.message_user(
-                request, "Selecione exatamente 1 chave para rotacionar.",
-                level=messages.WARNING
+                request,
+                "Selecione exatamente 1 chave para rotacionar.",
+                level=messages.WARNING,
             )
             return
         obj = queryset.first()
@@ -92,6 +97,10 @@ class ApiKeyAdmin(admin.ModelAdmin):
             level=messages.SUCCESS,
             extra_tags="safe",
         )
-    rotacionar_chave.short_description = "Rotacionar (gerar novo token) para a chave selecionada"
+
+    rotacionar_chave.short_description = (  # type: ignore
+        "Rotacionar (gerar novo token) para a chave selecionada"
+    )
+
 
 admin.site.register(ApiKey, ApiKeyAdmin)

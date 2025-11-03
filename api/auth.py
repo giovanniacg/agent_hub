@@ -1,31 +1,35 @@
 # auth.py
 from django.conf import settings
 from django.utils import timezone
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
+from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 
-from .models import ApiKey 
+from .models import ApiKey
+
 
 class APIKeyAuthentication(BaseAuthentication):
     """
-    Authorization: ApiKey <key_id>.<secret>
+    X-API-Key: <key_id>.<secret>
     """
-    keyword = b"ApiKey"
 
     def authenticate(self, request):
-        auth = get_authorization_header(request).split()
-        if not auth or auth[0] != self.keyword or len(auth) != 2:
-            return None
+        token = (
+            request.headers.get("X-API-Key")
+            or request.META.get("HTTP_X_API_KEY")  # fallback
+        )
+        if not token:
+            return None  # deixa outras auths tentarem
 
         try:
-            key_id, secret = auth[1].decode().split(".", 1)
+            key_id, secret = token.split(".", 1)
         except Exception:
             raise exceptions.AuthenticationFailed("Invalid API key format")
 
         try:
-            api_key = (ApiKey.objects
-                       .select_related("user")
-                       .get(key_id=key_id, is_active=True))
+            api_key = ApiKey.objects.select_related("user").get(
+                key_id=key_id, is_active=True
+            )
         except ApiKey.DoesNotExist:
             raise exceptions.AuthenticationFailed("API key not found")
 
@@ -44,5 +48,20 @@ class APIKeyAuthentication(BaseAuthentication):
         api_key.save(update_fields=["last_used_at"])
 
         request.api_key = api_key
-
         return (user, api_key)
+
+
+class XApiKeyScheme(OpenApiAuthenticationExtension):
+    # mesma import path da sua auth em REST_FRAMEWORK
+    target_class = "api.auth.APIKeyAuthentication"
+    name = "XApiKey"  # nome do esquema no OpenAPI
+
+    def get_security_definition(self, auto_schema):
+        # schema OpenAPI para API Key via header
+        return {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",  # cabeçalho esperado
+            # opcional: descrição
+            "description": "Forneça sua chave no header X-API-Key",
+        }

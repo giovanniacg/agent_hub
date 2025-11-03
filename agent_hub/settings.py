@@ -9,14 +9,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(
     DEBUG=(bool, False),
-    SECRET_KEY=(str, 'django-insecure-i1e*2gyrle6c6c!36nh@@m8*$x+nyr6-s^4ai$39knh6ju^8ot'),
+    SECRET_KEY=(
+        str,
+        "django-insecure-i1e*2gyrle6c6c!36nh@@m8*$x+nyr6-s^4ai$39knh6ju^8ot",
+    ),
     ALLOWED_HOSTS=(list, ["*"]),
-    DATABASE_NAME=(str, 'db.sqlite3'),
-    DATABASE_USER=(str, 'user'),
-    DATABASE_PASSWORD=(str, 'password'),
-    DATABASE_HOST=(str, 'localhost'),
+    DATABASE_NAME=(str, "db.sqlite3"),
+    DATABASE_USER=(str, "user"),
+    DATABASE_PASSWORD=(str, "password"),
+    DATABASE_HOST=(str, "localhost"),
     DATABASE_PORT=(int, 5432),
-    API_KEY_PEPPER=(str, 'unsafe-default-pepper'),
+    API_KEY_PEPPER=(str, "unsafe-default-pepper"),
+    DECIDIM_EMAIL=(str, "email@example.com"),
+    DECIDIM_PASSWORD=(str, "password123"),
+    DECIDIM_BASE_URL=(str, "https://lab-decide.dataprev.gov.br"),
 )
 
 ENV_FILE = BASE_DIR / ".env"
@@ -36,35 +42,36 @@ ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 # -------------------------------------------------------
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # Third-party apps
-    'rest_framework',
-    'rest_framework.authtoken',
-    'drf_spectacular',
-    'django_filters',
+    "rest_framework",
+    "rest_framework.authtoken",
+    "drf_spectacular",
+    "django_filters",
     # Local apps
-    'core',
-    'api',
+    "core",
+    "api",
+    "telegram",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'agent_hub.urls'
-WSGI_APPLICATION = 'agent_hub.wsgi.application'
-STATIC_URL = 'static/'
+ROOT_URLCONF = "agent_hub.urls"
+WSGI_APPLICATION = "agent_hub.wsgi.application"
+STATIC_URL = "static/"
 
 
 # -------------------------------------------------------
@@ -73,14 +80,14 @@ STATIC_URL = 'static/'
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
@@ -91,18 +98,18 @@ TEMPLATES = [
 # -------------------------------------------------------
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     },
-    'postgres': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': env('DATABASE_NAME'),
-        'USER': env('DATABASE_USER'),
-        'PASSWORD': env('DATABASE_PASSWORD'),
-        'HOST': env('DATABASE_HOST'),
-        'PORT': env('DATABASE_PORT'),
-    }
+    "postgres": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DATABASE_NAME"),
+        "USER": env("DATABASE_USER"),
+        "PASSWORD": env("DATABASE_PASSWORD"),
+        "HOST": env("DATABASE_HOST"),
+        "PORT": env("DATABASE_PORT"),
+    },
 }
 
 
@@ -112,16 +119,16 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -130,9 +137,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # INTERNATIONALIZATION                                  #
 # -------------------------------------------------------
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -170,20 +177,28 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "API endpoints for the agent hub",
     "VERSION": "1.0.0",
     "SCHEMA_PATH": "/api/schema/",
-    "COMPONENTS": {
-        "securitySchemes": {
-            "ApiKey": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-            }
-        }
-    }
+    "SECURITY": [
+        {"XApiKey": []},
+        {"BearerAuth": []},
+        {"cookieAuth": []},
+    ],
+    "SWAGGER_UI_SETTINGS": {
+        "persistAuthorization": True,
+    },
 }
 
 
 # -------------------------------------------------------
-# STATIC FILES SETTINGS                               #
+# STATIC FILES SETTINGS                                 #
 # -------------------------------------------------------
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+# -------------------------------------------------------
+# DEICIDIM SETTINGS                                     #
+# -------------------------------------------------------
+
+DECIDIM_EMAIL = env("DECIDIM_EMAIL")
+DECIDIM_PASSWORD = env("DECIDIM_PASSWORD")
+DECIDIM_BASE_URL = env("DECIDIM_BASE_URL")
