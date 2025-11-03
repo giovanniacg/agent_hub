@@ -19,6 +19,7 @@ env = environ.Env(
     DATABASE_PASSWORD=(str, "password"),
     DATABASE_HOST=(str, "localhost"),
     DATABASE_PORT=(int, 5432),
+    USE_POSTGRES=(bool, False),
     API_KEY_PEPPER=(str, "unsafe-default-pepper"),
     DECIDIM_EMAIL=(str, "email@example.com"),
     DECIDIM_PASSWORD=(str, "password123"),
@@ -112,6 +113,10 @@ DATABASES = {
         "PORT": env("DATABASE_PORT"),
     },
 }
+
+# Swap to Postgres when requested (e.g. inside docker-compose)
+if env("USE_POSTGRES"):
+    DATABASES["default"] = DATABASES["postgres"].copy()
 
 
 # -------------------------------------------------------
